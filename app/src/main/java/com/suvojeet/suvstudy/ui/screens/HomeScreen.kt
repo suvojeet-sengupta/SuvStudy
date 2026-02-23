@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.suvojeet.suvstudy.domain.model.Subject
 import com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -26,10 +27,13 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val upcomingTasks by viewModel.upcomingTasks.collectAsState()
+    val subjects by viewModel.subjects.collectAsState()
     
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var newTaskTitle by remember { mutableStateOf("") }
     var newTaskDesc by remember { mutableStateOf("") }
+    var expandedSubjectDropdown by remember { mutableStateOf(false) }
+    var selectedSubject by remember { mutableStateOf<Subject?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -60,32 +64,6 @@ fun HomeScreen(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-        }
-
-        // Today's Focus Card
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Today's Focus",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-                Text(
-                    text = "Complete Physics Chapter 4\nMaster Thermodynamics",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
 
         // Quick List / Upcoming
@@ -173,17 +151,53 @@ fun HomeScreen(
                     maxLines = 3
                 )
 
+                ExposedDropdownMenuBox(
+                    expanded = expandedSubjectDropdown,
+                    onExpandedChange = { expandedSubjectDropdown = !expandedSubjectDropdown }
+                ) {
+                    OutlinedTextField(
+                        value = selectedSubject?.name ?: "Select a Subject",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectDropdown) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        label = { Text("Subject") }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedSubjectDropdown,
+                        onDismissRequest = { expandedSubjectDropdown = false }
+                    ) {
+                        if (subjects.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("No subjects available. Please create one.") },
+                                onClick = { expandedSubjectDropdown = false }
+                            )
+                        } else {
+                            subjects.forEach { subject ->
+                                DropdownMenuItem(
+                                    text = { Text(subject.name) },
+                                    onClick = {
+                                        selectedSubject = subject
+                                        expandedSubjectDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
-                        if (newTaskTitle.isNotBlank()) {
-                            viewModel.addTask(newTaskTitle, newTaskDesc, 1L) // Hardcoded subjectId 1 for now
+                        if (newTaskTitle.isNotBlank() && selectedSubject != null) {
+                            viewModel.addTask(newTaskTitle, newTaskDesc, selectedSubject!!.id)
                             showAddTaskDialog = false
                             newTaskTitle = ""
                             newTaskDesc = ""
+                            selectedSubject = null
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    enabled = newTaskTitle.isNotBlank()
+                    enabled = newTaskTitle.isNotBlank() && selectedSubject != null
                 ) {
                     Text("Save Task")
                 }

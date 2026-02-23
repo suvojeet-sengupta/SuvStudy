@@ -3,18 +3,28 @@ package com.suvojeet.suvstudy.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.suvojeet.suvstudy.data.repository.StudyTaskRepository
+import com.suvojeet.suvstudy.data.repository.SubjectRepository
 import com.suvojeet.suvstudy.domain.model.StudyTask
+import com.suvojeet.suvstudy.domain.model.Subject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val taskRepository: StudyTaskRepository
+    private val taskRepository: StudyTaskRepository,
+    private val subjectRepository: SubjectRepository
 ) : ViewModel() {
 
     // Fetch up to 5 upcoming deadlines
     val upcomingTasks: StateFlow<List<StudyTask>> = taskRepository.getUpcomingTasks(5)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val subjects: StateFlow<List<Subject>> = subjectRepository.getAllSubjects()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

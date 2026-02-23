@@ -33,7 +33,7 @@ val appModule = module {
     single { GoalRepository(get()) }
 
     // ViewModels
-    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get(), get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.SubjectsViewModel(get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.FocusViewModel(get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.GoalsViewModel(get()) }
