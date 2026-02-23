@@ -26,6 +26,10 @@ class StudyTaskRepository(private val dao: StudyTaskDao) {
         }
     }
 
+    suspend fun getTaskById(id: Long): StudyTask? {
+        return dao.getTaskById(id)?.toDomain()
+    }
+
     suspend fun insertTask(task: StudyTask): Long {
         return dao.insertTask(task.toEntity())
     }

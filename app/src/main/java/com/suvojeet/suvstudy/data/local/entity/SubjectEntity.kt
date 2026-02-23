@@ -11,5 +11,6 @@ data class SubjectEntity(
     val description: String,
     val totalChapters: Int,
     val completedChapters: Int,
-    val colorHex: String?
+    val colorHex: String?,
+    val dailyGoalMinutes: Int = 0
 )

@@ -20,13 +20,14 @@ class SubjectsViewModel(
             initialValue = emptyList()
         )
 
-    fun addSubject(name: String, description: String, totalChapters: Int) {
+    fun addSubject(name: String, description: String, totalChapters: Int, dailyGoalMinutes: Int) {
         viewModelScope.launch {
             subjectRepository.insertSubject(
                 Subject(
                     name = name,
                     description = description,
-                    totalChapters = totalChapters
+                    totalChapters = totalChapters,
+                    dailyGoalMinutes = dailyGoalMinutes
                 )
             )
         }

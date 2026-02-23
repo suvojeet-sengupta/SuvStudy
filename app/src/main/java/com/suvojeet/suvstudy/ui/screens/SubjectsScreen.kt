@@ -31,6 +31,7 @@ fun SubjectsScreen(
     var newSubjectName by remember { mutableStateOf("") }
     var newSubjectDesc by remember { mutableStateOf("") }
     var newSubjectChapters by remember { mutableStateOf("") }
+    var newSubjectDailyGoal by remember { mutableStateOf("") }
 
     Scaffold(
         floatingActionButton = {
@@ -89,6 +90,13 @@ fun SubjectsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
+                            if (subject.dailyGoalMinutes > 0) {
+                                Text(
+                                    text = "Daily Goal: ${subject.dailyGoalMinutes} mins",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                         CircularProgressIndicator(
                             progress = { subject.progress },
@@ -146,15 +154,26 @@ fun SubjectsScreen(
                     singleLine = true
                 )
 
+                OutlinedTextField(
+                    value = newSubjectDailyGoal,
+                    onValueChange = { newSubjectDailyGoal = it },
+                    label = { Text("Daily Goal (Minutes, Optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+
                 Button(
                     onClick = {
                         if (newSubjectName.isNotBlank() && newSubjectChapters.isNotBlank()) {
                             val chapters = newSubjectChapters.toIntOrNull() ?: 0
-                            viewModel.addSubject(newSubjectName, newSubjectDesc, chapters)
+                            val dailyGoal = newSubjectDailyGoal.toIntOrNull() ?: 0
+                            viewModel.addSubject(newSubjectName, newSubjectDesc, chapters, dailyGoal)
                             showAddDialog = false
                             newSubjectName = ""
                             newSubjectDesc = ""
                             newSubjectChapters = ""
+                            newSubjectDailyGoal = ""
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),

@@ -15,6 +15,9 @@ interface StudyTaskDao {
     @Query("SELECT * FROM tasks WHERE isCompleted = 0 ORDER BY dueDate ASC LIMIT :limit")
     fun getUpcomingTasks(limit: Int): Flow<List<StudyTaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE id = :id")
+    suspend fun getTaskById(id: Long): StudyTaskEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: StudyTaskEntity): Long
 

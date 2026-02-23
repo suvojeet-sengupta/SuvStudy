@@ -11,13 +11,19 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    // Singleton Managers
+    single { com.suvojeet.suvstudy.domain.manager.TimerManager() }
+    single { com.suvojeet.suvstudy.domain.manager.ReminderManager(androidContext()) }
+
     // Database
     single {
         Room.databaseBuilder(
             androidContext(),
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     // DAOs
@@ -33,7 +39,7 @@ val appModule = module {
     single { GoalRepository(get()) }
 
     // ViewModels
-    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get(), get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get(), get(), get(), get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.SubjectsViewModel(get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.FocusViewModel(get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.GoalsViewModel(get()) }

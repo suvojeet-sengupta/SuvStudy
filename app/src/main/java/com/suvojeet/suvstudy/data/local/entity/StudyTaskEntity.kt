@@ -25,5 +25,6 @@ data class StudyTaskEntity(
     val description: String,
     val dueDate: Long?, // Stored as timestamp
     val isCompleted: Boolean,
-    val createdAt: Long
+    val createdAt: Long,
+    val timeSpentMinutes: Int = 0
 )

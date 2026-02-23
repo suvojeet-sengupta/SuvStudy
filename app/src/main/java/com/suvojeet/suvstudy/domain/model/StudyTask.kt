@@ -9,5 +9,6 @@ data class StudyTask(
     val description: String = "",
     val dueDate: LocalDateTime? = null,
     val isCompleted: Boolean = false,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val timeSpentMinutes: Int = 0
 )

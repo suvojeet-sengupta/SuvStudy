@@ -20,7 +20,8 @@ fun SubjectEntity.toDomain(): Subject {
         description = description,
         totalChapters = totalChapters,
         completedChapters = completedChapters,
-        colorHex = colorHex
+        colorHex = colorHex,
+        dailyGoalMinutes = dailyGoalMinutes
     )
 }
 
@@ -31,7 +32,8 @@ fun Subject.toEntity(): SubjectEntity {
         description = description,
         totalChapters = totalChapters,
         completedChapters = completedChapters,
-        colorHex = colorHex
+        colorHex = colorHex,
+        dailyGoalMinutes = dailyGoalMinutes
     )
 }
 
@@ -44,7 +46,8 @@ fun StudyTaskEntity.toDomain(): StudyTask {
         description = description,
         dueDate = dueDate?.let { LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault()) },
         isCompleted = isCompleted,
-        createdAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(createdAt), ZoneId.systemDefault())
+        createdAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(createdAt), ZoneId.systemDefault()),
+        timeSpentMinutes = timeSpentMinutes
     )
 }
 
@@ -56,7 +59,8 @@ fun StudyTask.toEntity(): StudyTaskEntity {
         description = description,
         dueDate = dueDate?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
         isCompleted = isCompleted,
-        createdAt = createdAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        createdAt = createdAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+        timeSpentMinutes = timeSpentMinutes
     )
 }
 
@@ -65,6 +69,7 @@ fun FocusSessionEntity.toDomain(): FocusSession {
     return FocusSession(
         id = id,
         subjectId = subjectId,
+        taskId = taskId,
         durationMinutes = durationMinutes,
         startTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault()),
         endTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(endTime), ZoneId.systemDefault()),
@@ -76,6 +81,7 @@ fun FocusSession.toEntity(): FocusSessionEntity {
     return FocusSessionEntity(
         id = id,
         subjectId = subjectId,
+        taskId = taskId,
         durationMinutes = durationMinutes,
         startTime = startTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
         endTime = endTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),

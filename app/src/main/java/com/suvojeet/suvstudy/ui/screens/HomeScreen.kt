@@ -5,6 +5,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,6 +31,7 @@ fun HomeScreen(
 ) {
     val upcomingTasks by viewModel.upcomingTasks.collectAsState()
     val subjects by viewModel.subjects.collectAsState()
+    val timerState by viewModel.timerState.collectAsState()
     
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var newTaskTitle by remember { mutableStateOf("") }
@@ -66,6 +70,42 @@ fun HomeScreen(
             )
         }
 
+        // Active Timer Card
+        if (timerState.activeTaskId != null) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Active: ${timerState.taskTitle}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        val mins = timerState.elapsedSeconds / 60
+                        val secs = timerState.elapsedSeconds % 60
+                        val timeString = "${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
+                        Text(timeString, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                    }
+                    Row {
+                        IconButton(onClick = { 
+                            if (timerState.isRunning) viewModel.pauseTimer() 
+                            else viewModel.resumeTimer()
+                        }) {
+                            Icon(if (timerState.isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = "Pause/Resume")
+                        }
+                        IconButton(onClick = { viewModel.stopTimer() }) {
+                            Icon(Icons.Filled.Stop, contentDescription = "Stop")
+                        }
+                    }
+                }
+            }
+        }
+
         // Quick List / Upcoming
         Text(
             text = "Upcoming Deadlines",
@@ -102,12 +142,17 @@ fun HomeScreen(
                                 Text(task.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 Text("Due: ${task.dueDate?.toLocalDate() ?: "Anytime"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                             }
-                            IconButton(onClick = { viewModel.toggleTaskCompletion(task) }) {
-                                Icon(
-                                    imageVector = if (task.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                                    contentDescription = "Toggle Completion",
-                                    tint = if (task.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            Row {
+                                IconButton(onClick = { viewModel.startTimer(task) }) {
+                                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start Timer", tint = MaterialTheme.colorScheme.primary)
+                                }
+                                IconButton(onClick = { viewModel.toggleTaskCompletion(task) }) {
+                                    Icon(
+                                        imageVector = if (task.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
+                                        contentDescription = "Toggle Completion",
+                                        tint = if (task.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }

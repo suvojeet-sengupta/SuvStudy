@@ -18,7 +18,7 @@ import com.suvojeet.suvstudy.data.local.entity.SubjectEntity
         FocusSessionEntity::class,
         GoalEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
