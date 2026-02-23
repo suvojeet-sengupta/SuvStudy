@@ -103,6 +103,7 @@ fun GoalsScreen(
             }
         }
     }
+}
 
     if (showAddDialog) {
         ModalBottomSheet(

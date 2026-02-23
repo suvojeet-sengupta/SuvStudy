@@ -101,6 +101,7 @@ fun SubjectsScreen(
             }
         }
     }
+}
 
     if (showAddDialog) {
         ModalBottomSheet(

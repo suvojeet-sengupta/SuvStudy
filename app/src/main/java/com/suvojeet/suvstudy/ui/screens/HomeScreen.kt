@@ -137,6 +137,7 @@ fun HomeScreen(
             }
         }
     }
+}
 
     if (showAddTaskDialog) {
         ModalBottomSheet(
