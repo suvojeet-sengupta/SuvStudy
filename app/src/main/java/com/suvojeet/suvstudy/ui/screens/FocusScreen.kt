@@ -3,15 +3,22 @@ package com.suvojeet.suvstudy.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.suvojeet.suvstudy.ui.viewmodel.FocusViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FocusScreen() {
+fun FocusScreen(
+    viewModel: FocusViewModel = koinViewModel()
+) {
+    val recentSessions by viewModel.recentSessions.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
