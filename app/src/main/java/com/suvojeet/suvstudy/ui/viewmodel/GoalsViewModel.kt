@@ -37,4 +37,10 @@ class GoalsViewModel(
             goalRepository.updateGoal(goal.copy(currentScore = newScore))
         }
     }
+    
+    fun deleteGoal(goal: Goal) {
+        viewModelScope.launch {
+            goalRepository.deleteGoal(goal)
+        }
+    }
 }

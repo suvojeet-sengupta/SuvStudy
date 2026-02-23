@@ -1,12 +1,15 @@
 package com.suvojeet.suvstudy.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,39 +67,73 @@ fun GoalsScreen(
             )
         } else {
             goals.forEach { goal ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = goal.title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            fontWeight = FontWeight.Bold
-                        )
-                        
-                        // Mock progress bar
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("Target: ${goal.targetScore}${goal.unit}", fontWeight = FontWeight.Medium)
-                                Text("Actual: ${goal.currentScore}${goal.unit}")
-                            }
-                            LinearProgressIndicator(
-                                progress = { goal.progress },
-                                modifier = Modifier.fillMaxWidth().height(12.dp).padding(vertical = 2.dp),
-                                color = MaterialTheme.colorScheme.tertiary,
-                                trackColor = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f),
+                var sliderValue by remember(goal.currentScore) { mutableStateOf(goal.currentScore) }
+                val dismissState = rememberSwipeToDismissBoxState(
+                    confirmValueChange = { dismissValue ->
+                        if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                            viewModel.deleteGoal(goal)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                )
+
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {
+                        val color = MaterialTheme.colorScheme.errorContainer
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(color, RoundedCornerShape(24.dp)),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Goal",
+                                modifier = Modifier.padding(end = 24.dp),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
                             )
+                        }
+                    }
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = goal.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            // Mock progress bar
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("Actual: ${String.format("%.1f", sliderValue)}${goal.unit}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary)
+                                    Text("Target: ${goal.targetScore}${goal.unit}", fontWeight = FontWeight.Medium)
+                                }
+                                
+                                Slider(
+                                    value = sliderValue,
+                                    onValueChange = { newValue -> sliderValue = newValue },
+                                    onValueChangeFinished = { viewModel.updateProgress(goal, sliderValue) },
+                                    valueRange = 0f..goal.targetScore,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
