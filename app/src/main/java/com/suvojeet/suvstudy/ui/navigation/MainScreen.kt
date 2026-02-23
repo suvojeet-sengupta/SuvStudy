@@ -15,10 +15,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.suvojeet.suvstudy.ui.screens.FocusScreen
 import com.suvojeet.suvstudy.ui.screens.GoalsScreen
 import com.suvojeet.suvstudy.ui.screens.HomeScreen
+import com.suvojeet.suvstudy.ui.screens.InsightsScreen
 import com.suvojeet.suvstudy.ui.screens.SubjectsScreen
+
+import com.suvojeet.suvstudy.ui.screens.SettingsScreen
 
 @Composable
 fun MainScreen() {
@@ -27,7 +29,7 @@ fun MainScreen() {
     val items = listOf(
         Screen.Home,
         Screen.Subjects,
-        Screen.Focus,
+        Screen.Insights,
         Screen.Goals
     )
 
@@ -44,15 +46,10 @@ fun MainScreen() {
                         selected = currentRoute == screen.route,
                         onClick = {
                             navController.navigate(screen.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         }
@@ -66,10 +63,25 @@ fun MainScreen() {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreen() }
+            composable(Screen.Home.route) { 
+                HomeScreen(
+                    onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToCalendar = { navController.navigate("calendar") }
+                ) 
+            }
             composable(Screen.Subjects.route) { SubjectsScreen() }
-            composable(Screen.Focus.route) { FocusScreen() }
+            composable(Screen.Insights.route) { InsightsScreen() }
             composable(Screen.Goals.route) { GoalsScreen() }
+            composable("settings") { 
+                SettingsScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                ) 
+            }
+            composable("calendar") {
+                com.suvojeet.suvstudy.ui.screens.CalendarScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

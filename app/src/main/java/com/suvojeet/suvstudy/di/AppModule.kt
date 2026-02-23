@@ -14,6 +14,7 @@ val appModule = module {
     // Singleton Managers
     single { com.suvojeet.suvstudy.domain.manager.TimerManager() }
     single { com.suvojeet.suvstudy.domain.manager.ReminderManager(androidContext()) }
+    single { com.suvojeet.suvstudy.domain.manager.SettingsManager(androidContext()) }
 
     // Database
     single {
@@ -39,9 +40,11 @@ val appModule = module {
     single { GoalRepository(get()) }
 
     // ViewModels
-    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get(), get(), get(), get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.HomeViewModel(get(), get(), get(), get(), get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.SubjectsViewModel(get()) }
-    viewModel { com.suvojeet.suvstudy.ui.viewmodel.FocusViewModel(get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.InsightsViewModel(get(), get()) }
     viewModel { com.suvojeet.suvstudy.ui.viewmodel.GoalsViewModel(get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.SettingsViewModel(get()) }
+    viewModel { com.suvojeet.suvstudy.ui.viewmodel.CalendarViewModel(get()) }
 }
 

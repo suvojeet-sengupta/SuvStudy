@@ -1,16 +1,22 @@
 package com.suvojeet.suvstudy.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +33,8 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigateToSettings: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val upcomingTasks by viewModel.upcomingTasks.collectAsState()
@@ -40,6 +48,19 @@ fun HomeScreen(
     var selectedSubject by remember { mutableStateOf<Subject?>(null) }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("SuvStudy") },
+                actions = {
+                    IconButton(onClick = onNavigateToCalendar) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Calendar")
+                    }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddTaskDialog = true },
@@ -131,122 +152,159 @@ fun HomeScreen(
             } else {
                 Column(modifier = Modifier.padding(16.dp)) {
                     upcomingTasks.forEach { task ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(task.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                Text("Due: ${task.dueDate?.toLocalDate() ?: "Anytime"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                            }
-                            Row {
-                                IconButton(onClick = { viewModel.startTimer(task) }) {
-                                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start Timer", tint = MaterialTheme.colorScheme.primary)
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { dismissValue ->
+                                if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                                    viewModel.deleteTask(task)
+                                    true
+                                } else {
+                                    false
                                 }
-                                IconButton(onClick = { viewModel.toggleTaskCompletion(task) }) {
+                            }
+                        )
+                        
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            backgroundContent = {
+                                val color = MaterialTheme.colorScheme.errorContainer
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(vertical = 8.dp)
+                                        .background(color, RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
                                     Icon(
-                                        imageVector = if (task.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                                        contentDescription = "Toggle Completion",
-                                        tint = if (task.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        modifier = Modifier.padding(end = 16.dp),
+                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(task.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text("Due: ${task.dueDate?.toLocalDate() ?: "Anytime"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                }
+                                Row {
+                                    IconButton(onClick = { viewModel.startTimer(task, isPomodoro = true) }) {
+                                        Icon(Icons.Filled.Timer, contentDescription = "Start Pomodoro", tint = MaterialTheme.colorScheme.tertiary)
+                                    }
+                                    IconButton(onClick = { viewModel.startTimer(task, isPomodoro = false) }) {
+                                        Icon(Icons.Filled.PlayArrow, contentDescription = "Start Timer", tint = MaterialTheme.colorScheme.primary)
+                                    }
+                                    IconButton(onClick = { viewModel.toggleTaskCompletion(task) }) {
+                                        Icon(
+                                            imageVector = if (task.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
+                                            contentDescription = "Toggle Completion",
+                                            tint = if (task.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (showAddTaskDialog) {
+            ModalBottomSheet(
+                onDismissRequest = { showAddTaskDialog = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .padding(bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "New Task",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    OutlinedTextField(
+                        value = newTaskTitle,
+                        onValueChange = { newTaskTitle = it },
+                        label = { Text("Task Title (e.g., Assignment 1)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = newTaskDesc,
+                        onValueChange = { newTaskDesc = it },
+                        label = { Text("Description (Optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandedSubjectDropdown,
+                        onExpandedChange = { expandedSubjectDropdown = !expandedSubjectDropdown }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedSubject?.name ?: "Select a Subject",
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectDropdown) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            label = { Text("Subject") }
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedSubjectDropdown,
+                            onDismissRequest = { expandedSubjectDropdown = false }
+                        ) {
+                            if (subjects.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("No subjects available. Please create one.") },
+                                    onClick = { expandedSubjectDropdown = false }
+                                )
+                            } else {
+                                subjects.forEach { subject ->
+                                    DropdownMenuItem(
+                                        text = { Text(subject.name) },
+                                        onClick = {
+                                            selectedSubject = subject
+                                            expandedSubjectDropdown = false
+                                        }
                                     )
                                 }
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-}
 
-    if (showAddTaskDialog) {
-        ModalBottomSheet(
-            onDismissRequest = { showAddTaskDialog = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-                    .padding(bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "New Task",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                OutlinedTextField(
-                    value = newTaskTitle,
-                    onValueChange = { newTaskTitle = it },
-                    label = { Text("Task Title (e.g., Assignment 1)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = newTaskDesc,
-                    onValueChange = { newTaskDesc = it },
-                    label = { Text("Description (Optional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = expandedSubjectDropdown,
-                    onExpandedChange = { expandedSubjectDropdown = !expandedSubjectDropdown }
-                ) {
-                    OutlinedTextField(
-                        value = selectedSubject?.name ?: "Select a Subject",
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectDropdown) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
-                        label = { Text("Subject") }
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedSubjectDropdown,
-                        onDismissRequest = { expandedSubjectDropdown = false }
-                    ) {
-                        if (subjects.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("No subjects available. Please create one.") },
-                                onClick = { expandedSubjectDropdown = false }
-                            )
-                        } else {
-                            subjects.forEach { subject ->
-                                DropdownMenuItem(
-                                    text = { Text(subject.name) },
-                                    onClick = {
-                                        selectedSubject = subject
-                                        expandedSubjectDropdown = false
-                                    }
-                                )
+                    Button(
+                        onClick = {
+                            if (newTaskTitle.isNotBlank() && selectedSubject != null) {
+                                viewModel.addTask(newTaskTitle, newTaskDesc, selectedSubject!!.id)
+                                showAddTaskDialog = false
+                                newTaskTitle = ""
+                                newTaskDesc = ""
+                                selectedSubject = null
                             }
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        enabled = newTaskTitle.isNotBlank() && selectedSubject != null
+                    ) {
+                        Text("Save Task")
                     }
                 }
-
-                Button(
-                    onClick = {
-                        if (newTaskTitle.isNotBlank() && selectedSubject != null) {
-                            viewModel.addTask(newTaskTitle, newTaskDesc, selectedSubject!!.id)
-                            showAddTaskDialog = false
-                            newTaskTitle = ""
-                            newTaskDesc = ""
-                            selectedSubject = null
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    enabled = newTaskTitle.isNotBlank() && selectedSubject != null
-                ) {
-                    Text("Save Task")
-                }
             }
         }
     }
 }
+}
+

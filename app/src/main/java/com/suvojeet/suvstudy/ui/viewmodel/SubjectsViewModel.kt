@@ -32,4 +32,10 @@ class SubjectsViewModel(
             )
         }
     }
+
+    fun deleteSubject(subject: Subject) {
+        viewModelScope.launch {
+            subjectRepository.deleteSubject(subject)
+        }
+    }
 }

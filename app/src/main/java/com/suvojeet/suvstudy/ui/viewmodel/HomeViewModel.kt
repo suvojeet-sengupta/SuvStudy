@@ -9,6 +9,7 @@ import com.suvojeet.suvstudy.domain.manager.TimerManager
 import com.suvojeet.suvstudy.domain.model.FocusSession
 import com.suvojeet.suvstudy.domain.model.StudyTask
 import com.suvojeet.suvstudy.domain.model.Subject
+import com.suvojeet.suvstudy.domain.manager.SettingsManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -19,7 +20,8 @@ class HomeViewModel(
     private val taskRepository: StudyTaskRepository,
     private val subjectRepository: SubjectRepository,
     private val focusSessionRepository: FocusSessionRepository,
-    private val timerManager: TimerManager
+    private val timerManager: TimerManager,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     // Fetch up to 5 upcoming deadlines
@@ -44,14 +46,22 @@ class HomeViewModel(
             initialValue = com.suvojeet.suvstudy.domain.manager.TimerState()
         )
 
-    fun startTimer(task: StudyTask) {
-        timerManager.startTimer(task.id, task.title, task.subjectId)
+    val pomodoroWorkMins = settingsManager.pomodoroWorkMins.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 25
+    )
+
+    fun startTimer(task: StudyTask, isPomodoro: Boolean = false) {
+        val workMins = pomodoroWorkMins.value
+        timerManager.startTimer(task.id, task.title, task.subjectId, isPomodoro, workMins)
     }
 
     fun resumeTimer() {
         val state = timerState.value
+        val workMins = pomodoroWorkMins.value
         if (state.activeTaskId != null && state.taskTitle != null && state.subjectId != null) {
-            timerManager.startTimer(state.activeTaskId, state.taskTitle, state.subjectId)
+            timerManager.startTimer(state.activeTaskId, state.taskTitle, state.subjectId, state.isPomodoroMode, workMins)
         }
     }
 
@@ -99,6 +109,12 @@ class HomeViewModel(
                     subjectId = subjectId 
                 )
             )
+        }
+    }
+
+    fun deleteTask(task: StudyTask) {
+        viewModelScope.launch {
+            taskRepository.deleteTask(task)
         }
     }
 }
