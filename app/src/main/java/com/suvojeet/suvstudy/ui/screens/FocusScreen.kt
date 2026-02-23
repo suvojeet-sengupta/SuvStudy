@@ -2,6 +2,10 @@ package com.suvojeet.suvstudy.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.suvojeet.suvstudy.ui.viewmodel.FocusViewModel
+import com.suvojeet.suvstudy.ui.viewmodel.TimerState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -19,6 +24,13 @@ fun FocusScreen(
     viewModel: FocusViewModel = koinViewModel()
 ) {
     val recentSessions by viewModel.recentSessions.collectAsState()
+    val timerState by viewModel.timerState.collectAsState()
+    val timeLeft by viewModel.timeLeftInSeconds.collectAsState()
+
+    val minutes = String.format("%02d", timeLeft / 60)
+    val seconds = String.format("%02d", timeLeft % 60)
+    
+    val progress = timeLeft.toFloat() / (25 * 60)
 
     Column(
         modifier = Modifier
@@ -51,8 +63,15 @@ fun FocusScreen(
             modifier = Modifier.size(280.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    strokeWidth = 8.dp
+                )
                 Text(
-                    text = "25:00",
+                    text = "$minutes:$seconds",
                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -62,13 +81,34 @@ fun FocusScreen(
 
         Spacer(modifier = Modifier.height(64.dp))
 
-        Button(
-            onClick = { /* TODO */ },
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Start Pomodoro", style = MaterialTheme.typography.titleMedium)
+            if (timerState == TimerState.RUNNING) {
+                FloatingActionButton(
+                    onClick = { viewModel.pauseTimer() },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Icon(Icons.Filled.Pause, contentDescription = "Pause")
+                }
+            } else {
+                FloatingActionButton(
+                    onClick = { viewModel.startTimer() },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start")
+                }
+            }
+            
+            if (timerState != TimerState.IDLE) {
+                FloatingActionButton(
+                    onClick = { viewModel.stopTimer() },
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Icon(Icons.Filled.Stop, contentDescription = "Stop", tint = MaterialTheme.colorScheme.onErrorContainer)
+                }
+            }
         }
     }
 }
