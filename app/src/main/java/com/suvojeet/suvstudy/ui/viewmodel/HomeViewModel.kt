@@ -7,6 +7,7 @@ import com.suvojeet.suvstudy.domain.model.StudyTask
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val taskRepository: StudyTaskRepository
@@ -19,4 +20,22 @@ class HomeViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun toggleTaskCompletion(task: StudyTask) {
+        viewModelScope.launch {
+            taskRepository.updateTask(task.copy(isCompleted = !task.isCompleted))
+        }
+    }
+
+    fun addTask(title: String, description: String, subjectId: Long) {
+        viewModelScope.launch {
+            taskRepository.insertTask(
+                StudyTask(
+                    title = title,
+                    description = description,
+                    subjectId = subjectId // Using the provided subjectId (placeholder 1L from UI for now)
+                )
+            )
+        }
+    }
 }
